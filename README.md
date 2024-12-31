@@ -34,5 +34,6 @@ FittingApp is a mobile application that collects real-world health and fitness t
 - stress_level: Daily stress level (1-10)
 - hydration_level: Daily water intake in liters
 - fitness_level: Calculated fitness score based on cumulative activity
+- fitness_level_category: The fitness level column has been made categorical by dividing it into 3 equal parts.
 
 The aim of the project is to classify individuals as low, medium and high according to their fitness levels in the light of the data obtained.
