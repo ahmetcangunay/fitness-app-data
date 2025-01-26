@@ -1,0 +1,188 @@
+---
+title: "pca_and_factor"
+output: html_document
+---
+
+```{r}
+# Import Library
+library(haven)
+library(readxl)
+library(PerformanceAnalytics)
+library(corrplot)
+library("Hmisc")
+library(psych)
+library(factoextra)
+library(matlib)
+library(scatterplot3d)
+```
+
+```{r}
+app_data_factor<-read_excel("~/Desktop/my_project/fitness_app_data_project/data/fitness_app_data_factor.xlsx")
+```
+
+```{r}
+all_factors <- app_data_factor[,1:9]
+```
+
+```{r}
+chart.Correlation(all_factors, histogram=TRUE, pch=19)
+```
+
+```{r}
+corrplot(cor(all_factors))
+```
+
+```{r}
+rcorr(as.matrix(all_factors),type="pearson") # Veri matris formatında olmalı
+```
+
+```{r}
+KMO(all_factors) # KMO ve Anti-image matrix diagonals (MSA values)
+```
+
+```{r}
+# Bartlett's Test of Spherecity
+cortest.bartlett(cor(all_factors),nrow(app_data_factor)) #Bartlett test
+```
+
+```{r}
+# Principal Component Analysis (PCA)
+fit.pca <- prcomp( ~., data=app_data_factor[,-1], scale=TRUE)
+fit.pca$rotation # loadings
+```
+
+```{r}
+# Decision for component number
+summary(fit.pca)
+```
+
+```{r}
+# Eigenvalues
+(fit.pca$sdev)^2 
+```
+
+```{r}
+# Variance Explanation Ratios
+((fit.pca$sdev)^2)/4 
+```
+
+```{r}
+# For Plotting Scree Plot 
+plot(fit.pca)
+```
+
+```{r}
+plot(fit.pca,type="line")
+```
+
+```{r}
+scree <- fviz_eig(fit.pca)
+scree
+```
+
+```{r}
+# First 5 component selected 
+fit.pca$rotation[,1:5] #loadings
+```
+
+```{r}
+fit.pca$rotation
+```
+
+```{r}
+fit.pca$rotation[,5]*fit.pca$sdev[5] # Factor
+```
+
+```{r}
+app_data_factor$comp1 <- fit.pca$x[,1] 
+app_data_factor$comp2 <- fit.pca$x[,2]
+app_data_factor$comp3 <- fit.pca$x[,3]
+app_data_factor$comp4 <- fit.pca$x[,4]
+app_data_factor$comp5 <- fit.pca$x[,5]
+
+app_data_factor$index <- app_data_factor$comp1+app_data_factor$comp2 + app_data_factor$comp3 + app_data_factor$comp4 + app_data_factor$comp5 
+# or we can apply a function with sum
+indeks <- apply(fit.pca$x[,1:5],1,sum)
+
+## Sıralama
+head(app_data_factor[order(app_data_factor$index,decreasing = T),2])
+```
+
+```{r}
+fviz_pca_var(fit.pca,col.var="steelblue",
+             repel = TRUE # Avoid text overlapping
+)
+```
+
+```{r}
+app_data_factor_2 <- read_excel("~/Desktop/my_project/fitness_app_data_project/data/fitness_app_data_factor.xlsx")
+```
+
+```{r}
+all_factors_2 <- app_data_factor_2[,1:9]
+all_factors_2 <- na.omit(all_factors_2)
+```
+
+```{r}
+summary(all_factors_2)
+```
+
+```{r}
+corrplot(cor(all_factors_2))
+```
+
+```{r}
+correlation <- cor(all_factors_2)
+correlation
+```
+
+```{r}
+rcorr(as.matrix(all_factors_2),type="pearson")
+```
+
+```{r}
+inverse_corr<-inv(correlation)# Inverse Corr. Matrix (VIF)
+colnames(inverse_corr)<-rownames(inverse_corr)<-colnames(correlation)
+inverse_corr
+```
+
+```{r}
+KMO(all_factors_2) # KMO ve MSA Anti-image matrix
+```
+
+```{r}
+cortest.bartlett(cor(all_factors_2),nrow(all_factors_2)) #Bartlett test 
+```
+
+```{r}
+fac_root_l <- principal(all_factors_2, nfactors =5, rotate = "none")
+
+print(fac_root_l$loadings, digits=3, cutoff=.3, sort=TRUE) 
+```
+
+```{r}
+fac_root_l$communality
+```
+
+```{r}
+# or we can use this formula
+rowSums(fac_root_l$loadings[ , ]^2)
+```
+
+```{r}
+colSums(fac_root_l$loadings[ , ]^2)/9 #Variance explanation ratios
+```
+
+```{r}
+plot(fac_root_l$values, type="b", main="ScreePlot", xlab="Number of Factors", ylab="Eigenvalues")
+```
+
+```{r}
+# Varimax Rotation Application
+fac_root_l <- principal(all_factors_2, nfactors =5, rotate = "varimax")
+print(fac_root_l$loadings, digits=3, cutoff=.3, sort=TRUE)
+```
+
+```{r}
+fa.diagram(fac_root_l)
+```

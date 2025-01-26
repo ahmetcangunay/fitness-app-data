@@ -1,0 +1,109 @@
+---
+title: "discriminant"
+output: html_document
+---
+
+```{r}
+library(haven)
+library(funModeling)
+library(dplyr)
+library(rstatix)
+library(corrplot)
+library(biotools)
+library(MASS) 
+library(klaR)
+library(readxl)
+```
+
+```{r}
+app_data_disc<-read_excel("~/Desktop/my_project/fitness_app_data_project/data/fitness_app_data_disc.xlsx")
+```
+
+```{r}
+plot_num(app_data_disc[,])
+```
+
+```{r}
+shapiro.test(app_data_disc$age_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$duration_minutes_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$resting_heart_rate_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$blood_pressure_diastolic_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$blood_pressure_systolic_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$bmi_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$hydration_level_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$daily_steps_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$stress_level_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$hours_sleep_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$avg_heart_rate_transformed)
+```
+
+```{r}
+shapiro.test(app_data_disc$calories_burned_transformed)
+```
+
+```{r}
+app_data_disc %>% 
+  dplyr::select(!c(fitness_level_category, Dis_1, category,gender, activity_type, intensity, health_condition, smoking_status)) %>%
+  mshapiro_test()
+```
+
+```{r}
+numeric_df <- app_data_disc[, sapply(app_data_disc, is.numeric)]
+```
+
+```{r}
+corrplot(cor(numeric_df, method = "spearman"), method="number")
+```
+
+```{r}
+lda<- lda(fitness_level_category ~ age_transformed+duration_minutes_transformed+calories_burned_transformed+avg_heart_rate_transformed+hours_sleep_transformed+stress_level_transformed+daily_steps_transformed+hydration_level_transformed+bmi_transformed+blood_pressure_systolic_transformed+blood_pressure_diastolic_transformed, data=app_data_disc) 
+lda
+```
+
+```{r}
+lda_pred <- predict(lda)
+lda_pred$class
+```
+
+```{r}
+lda_pred$x
+```
+
+```{r}
+ldahist(lda_pred$x, g = app_data_disc$fitness_level_category) 
+```
+
+```{r}
+# Prior Chance p1^2+p^2
+lda$prior[1]^2 + lda$prior[2]^2 + lda$prior[3]^2
+```

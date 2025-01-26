@@ -1,0 +1,32 @@
+---
+title: "0_correlation_matrix"
+output: html_document
+---
+
+```{r}
+# Import Libraries
+library(readxl)
+library(haven)
+library(PerformanceAnalytics)
+library(corrplot)
+```
+
+```{r}
+# Read Data
+fitness_app_data <- read_excel("~/Desktop/my_project/fitness_app_data_project/data/fitness_app_data_raw.xlsx")
+View(fitness_app_data)
+```
+
+```{r}
+# Correlation Matrix
+num_cols <- sapply(fitness_app_data, is.numeric)
+numerical_data <- fitness_app_data[, num_cols]
+# numerical_data <- numerical_data[, !colnames(numerical_data) %in% "fitness_level"]
+chart.Correlation(numerical_data, histogram = TRUE, pch = 19)
+```
+
+```{r}
+# Correlation Matrix with Circle
+corr_matrix <- cor(numerical_data, use = "complete.obs")
+corrplot(corr_matrix, method = "circle")
+```

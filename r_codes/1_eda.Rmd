@@ -1,0 +1,240 @@
+---
+title: "1_eda"
+output: 
+  html_document: 
+    fig_caption: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+# Import Libraries
+library(readxl)
+library(haven)
+library(dplyr)
+library(moments)
+```
+
+```{r}
+# Read Data
+fitness_app_data <- read_excel("~/Desktop/my_project/fitness_app_data_project/data/fitness_app_data_processed.xlsx")
+View(fitness_app_data)
+```
+
+```{r}
+str(fitness_app_data)
+```
+
+```{r}
+# Detect Missing Values
+colSums(is.na(fitness_app_data))
+```
+
+```{r}
+table(fitness_app_data$activity_type)
+```
+
+Yapılan herbir aktivitenin dengeli olarak dağıldığı sonucuna varılabilir.
+
+```{r}
+table(fitness_app_data$intensity)
+```
+
+```{r}
+table(fitness_app_data$gender)
+```
+
+```{r}
+table(fitness_app_data$health_condition)
+```
+
+```{r}
+table(fitness_app_data$smoking_status)
+```
+
+Kategorik verilerin dağılımlarının oldukça çeşitli olduğunu söyleyebiliriz.
+
+# Uç (Aykırı) Değer Kontrolü
+
+## Boxplots (Kutu Grafikleri)
+
+```{r}
+boxplot(fitness_app_data$age)
+title("age boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$duration_minutes)
+title("duration_minutes boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$calories_burned)
+title("calories_burned boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$avg_heart_rate)
+title("avg_heart_rate boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$hours_sleep)
+title("hours_sleep boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$daily_steps)
+title("daily_steps boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$hydration_level)
+title("hydration_level boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$stress_level)
+title("stress_level boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$bmi)
+title("bmi boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$resting_heart_rate)
+title("resting_heart_rate boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$blood_pressure_systolic)
+title("blood_pressure_systolic boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$blood_pressure_diastolic)
+title("blood_pressure_diastolic boxplot")
+```
+
+```{r}
+boxplot(fitness_app_data$fitness_level)
+title("fitness_level boxplot")
+```
+
+Boxplotlar incelendiğinde (blood_pressure_diastolic, blood_pressure_systolic, resting_heart_rate, daily_steps, hours_sleep, avg_heart_rate ve calories_burned) değişkenlerinde uç değerlerin olduğu söylenebilir.
+
+## Genel Özet İstatistikleri (Data Summary)
+
+```{r}
+summary(fitness_app_data)
+```
+
+Yapılan fiziksel aktivitelerde minimum sürenin 20 dakika, maksimum ise 120 dakika olduğu, yakılan kalorinin minimum 1.10, maksimum 66.80 olduğu gibi çıkarımlarda bulunulabilir.
+
+## **Çarpıklık & Basıklık Katsayıları (Skewness & Curtosis Analysis)**
+
+```{r}
+skewness(fitness_app_data$duration_minutes)
+```
+
+```{r}
+kurtosis(fitness_app_data$duration_minutes)
+```
+
+```{r}
+hist(fitness_app_data$duration_minutes)
+```
+
+Egzersiz süreleri incelendiğinde;
+
+-   Çarpıklık (skewness) değeri 0.038 olduğundan, dağılım neredeyse simetriktir.
+
+-   0'a çok yakın bir çarpıklık değeri, dağılımın sola veya sağa belirgin bir kayması olmadığını gösterir.
+
+-   Kurtosis değeri 1.76 olup, normal dağılımın kurtosis değeri olan 3'ten düşüktür.
+
+-   Bu, dağılımın normal dağılıma göre daha basık (platykurtic) olduğunu gösterir.
+
+-   Uç değerlerin normal dağılıma göre daha az olduğunu işaret eder.
+
+-   Kullanıcıların egzersiz sürelerinin oldukça dengeli bir dağılım gösterdiği söylenebilir.
+
+```{r}
+skewness(fitness_app_data$calories_burned)
+```
+
+```{r}
+kurtosis(fitness_app_data$calories_burned)
+```
+
+```{r}
+hist(fitness_app_data$calories_burned)
+```
+
+Yakılan kalori miktarı incelendiğinde;
+
+-   Sağa çarpık (pozitif çarpık) bir dağılım görülmektedir.
+
+-   Çarpıklık değeri 1.27 olup, belirgin bir sağa çarpıklık olduğunu doğrulamaktadır.
+
+-   Kurtosis değeri 4.93 olup, normal dağılımın kurtosis değeri olan 3'ten yüksektir.
+
+-   Bu, dağılımın sivri (leptokurtic) olduğunu gösterir.
+
+-   Fitness uygulaması kullanıcılarının çoğunluğu düşük-orta seviye kalori yakımı gerçekleştirmektedir.
+
+-   Az sayıda kullanıcı yüksek kalori yakımı (40+ kalori) olan aktiviteler yapmaktadır.
+
+-   Bu dağılım, kullanıcıların çoğunlukla hafif ile orta şiddetli egzersizleri tercih ettiğini göstermektedir.
+
+```{r}
+skewness(fitness_app_data$avg_heart_rate)
+```
+
+```{r}
+kurtosis(fitness_app_data$avg_heart_rate)
+```
+
+```{r}
+hist(fitness_app_data$avg_heart_rate)
+```
+
+Ortalama kalp atış hızı değerleri incelendiğinde;
+
+-   Histogram yaklaşık olarak çan eğrisi (normal dağılım) şeklindedir.
+
+-   Hafif sağa çarpık bir dağılım görülmektedir (skewness: 0.35).
+
+-   Kurtosis değeri 2.67 olup, normal dağılımın kurtosis değeri olan 3'e yakındır.
+
+-   Bu değer, dağılımın normal dağılıma oldukça benzediğini gösterir.
+
+-   Hafif basık (platykurtic) bir yapı göstermektedir.
+
+```{r}
+skewness(fitness_app_data$daily_steps)
+```
+
+```{r}
+kurtosis(fitness_app_data$daily_steps)
+```
+
+```{r}
+hist(fitness_app_data$daily_steps)
+```
+
+Günlük adım sayısı değerlerine bakarak;
+
+-   Neredeyse mükemmel bir normal dağılım (çan eğrisi) görünümüne sahiptir.
+
+-   Çarpıklık (skewness) değeri 0.084 olup, neredeyse tamamen simetriktir.
+
+-   Kurtosis değeri 2.86 olup, normal dağılımın değeri olan 3'e çok yakındır
+
+-   Bu, dağılımın normal dağılıma çok benzediğini gösterir.
+
+-   Uç değerlerin dağılımı normal dağılıma oldukça yakındır.
+
+-   Kullanıcıların çoğu günde 7000-9000 adım arasında yürümektedir.

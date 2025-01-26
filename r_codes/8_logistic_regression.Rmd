@@ -1,0 +1,182 @@
+---
+title: "logistic_regression"
+output: html_document
+---
+
+```{r}
+library(readxl)
+library(tidyverse) 
+library(modelr)    
+library(broom)   
+library(haven)
+library(corrplot)
+library(matlib)
+library(ResourceSelection)
+library("DescTools")
+library(cvms)
+library(ggplot2)
+library(broom)
+library(tibble)  
+library(MASS)
+library(dplyr)
+```
+
+```{r}
+logistic_data <- read_excel("~/Desktop/my_project/fitness_app_data_project/data/fitness_app_data_transformed_logistic.xlsx")
+summary(logistic_data)
+```
+
+```{r}
+colnames(logistic_data)
+```
+
+```{r}
+data <- logistic_data[, c("smoking_status_new_encoded", "age_transformed", "duration_minutes_transformed")]
+```
+
+```{r}
+summary(data)
+```
+
+```{r}
+category<- factor(data$smoking_status_new_encoded, levels=c(0,1),labels=c("no","yes")) 
+summary(logistic_data)
+```
+
+```{r}
+korelasyon<-corrplot(cor(data), method="number")
+```
+
+```{r}
+invkor<-inv(korelasyon$corr)# korelasyon matrisinin tersi (VIF)
+invkor
+```
+
+```{r}
+model_log <- glm(smoking_status_new_encoded ~ duration_minutes_transformed + age_transformed, family = "binomial", data = data)
+
+model_log$deviance
+```
+
+```{r}
+model_log$null.deviance
+```
+
+```{r}
+kisquare<- model_log$null.deviance-model_log$deviance
+kisquare
+```
+
+```{r}
+# DOF
+model_log$df.null
+```
+
+```{r}
+model_log$df.residual
+```
+
+```{r}
+df<-model_log$df.null-model_log$df.residual
+df
+```
+
+```{r}
+kisquare.p<- 1 - pchisq(kisquare,df)
+kisquare.p
+```
+
+```{r}
+hoslem.test(model_log$y,fitted(model_log))
+```
+
+```{r}
+# R^2 Calc
+PseudoR2(model_log, which = c("CoxSnell","Nagelkerke"))
+```
+
+```{r}
+N<-nrow(log)
+```
+
+```{r}
+# Cox and Snell R^2
+R.cs <- 1 - exp ((model_log$deviance - model_log$null.deviance) /N)
+R.cs
+```
+
+```{r}
+# Nagelkerke R^2
+R.n<-R.cs /(1-(exp(-(model_lojistik6$null.deviance/N))))
+R.n
+```
+
+```{r}
+exp(coef(model_log))
+```
+
+```{r}
+exp(confint.default(model_log,level = 0.95)) 
+```
+
+```{r}
+smoking_pred<-fitted(model_log)
+smoking_fac<- ifelse(smoking_pred>0.5,"yes","no")
+t_tab <- table(model_log$data$smoking_status_new_encoded, smoking_fac)
+t_tab
+```
+
+```{r}
+sum(diag(t_tab)) / sum(t_tab)
+```
+
+```{r}
+datatib <- tibble("target" = logistic_data$smoking_status_new_encoded,"prediction" = smoking_fac)
+datatib
+```
+
+```{r}
+basic_table <- table(datatib)
+basic_table
+```
+
+```{r}
+step_model<-step(model_log,direction="both") #direction=c("backward","forward","both") 
+```
+
+```{r}
+step_model
+```
+
+```{r}
+summary(step_model)
+```
+
+```{r}
+exp(step_model$coefficients)
+```
+
+```{r}
+exp(confint.default(step_model,level = 0.95)) 
+```
+
+```{r}
+smoke_pred<-fitted(step_model)
+smoke_fac<- ifelse(smoke_pred>0.5,"yes","no")
+t_tab <- table(model_log$data$smoking_status_new_encoded, smoke_fac)
+t_tab
+```
+
+```{r}
+sum(diag(t_tab)) / sum(t_tab)
+```
+
+```{r}
+datatib <- tibble("target" = model_log$data$smoking_status_new_encoded,"prediction" = smoke_fac)
+datatib
+```
+
+```{r}
+basic_table <- table(datatib)
+basic_table
+```

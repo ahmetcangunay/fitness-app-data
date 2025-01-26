@@ -1,0 +1,167 @@
+---
+title: "2_normality_analysis"
+output: html_document
+---
+
+## Q-Q Grafikleri
+
+```{r}
+qqnorm(fitness_app_data$duration_minutes, main = "duration_minutes qq plot", col="pink")
+qqline(fitness_app_data$duration_minutes, col="red")
+```
+
+```{r}
+qqnorm(fitness_app_data$calories_burned, main = "calories_burned qq plot", col="black")
+qqline(fitness_app_data$calories_burned, col="red")
+```
+
+```{r}
+qqnorm(fitness_app_data$avg_heart_rate, main = "avg_heart_rate qq plot", col="green")
+qqline(fitness_app_data$avg_heart_rate, col="red")
+```
+
+```{r}
+qqnorm(fitness_app_data$daily_steps, main = "daily_steps qq plot", col="orange")
+qqline(fitness_app_data$daily_steps, col="red")
+```
+
+```{r echo = TRUE, fig.width = 20}
+# Select Numerical Variables
+numeric_cols <- sapply(fitness_app_data, is.numeric)
+numeric_data <- fitness_app_data[, numeric_cols]
+
+# Create Multiple Graphs
+par(mfrow = c(2, 3))  # 2x3 Matrix Graphs
+
+# Plot QQ Plots for every numerical variables
+for (col_name in colnames(numeric_data)) {
+  qqnorm(numeric_data[[col_name]], main = paste("Q-Q Plot of", col_name))
+  qqline(numeric_data[[col_name]], col = "red")
+}
+```
+
+```{r}
+# Shapiro-Wilk Test
+shapiro_results <- list(
+  daily_steps = shapiro.test(fitness_app_data$daily_steps),
+  hours_sleep = shapiro.test(fitness_app_data$hours_sleep),
+  stress_level = shapiro.test(fitness_app_data$stress_level),
+  hydration_level = shapiro.test(fitness_app_data$hydration_level),
+  calories_burned = shapiro.test(fitness_app_data$calories_burned),
+  age = shapiro.test(fitness_app_data$age),
+  duration_minutes = shapiro.test(fitness_app_data$duration_minutes),
+  avg_heart_rate = shapiro.test(fitness_app_data$avg_heart_rate),
+  bmi = shapiro.test(fitness_app_data$bmi),
+  resting_heart_rate = shapiro.test(fitness_app_data$resting_heart_rate),
+  blood_press_systolic = shapiro.test(fitness_app_data$blood_pressure_systolic),
+  blood_press_diastolic= shapiro.test(fitness_app_data$blood_pressure_diastolic)
+)
+
+# Kolmogorov-Smirnov Test
+# Againts Normal Dist.
+ks_results <- list(
+  daily_steps = ks.test(fitness_app_data$daily_steps, "pnorm", 
+                       mean = mean(fitness_app_data$daily_steps), 
+                       sd = sd(fitness_app_data$daily_steps)),
+  
+  hours_sleep = ks.test(fitness_app_data$hours_sleep, "pnorm", 
+                          mean = mean(fitness_app_data$hours_sleep), 
+                          sd = sd(fitness_app_data$hours_sleep)),
+  
+  stress_level = ks.test(fitness_app_data$stress_level, "pnorm", 
+                        mean = mean(fitness_app_data$stress_level), 
+                        sd = sd(fitness_app_data$stress_level)),
+  
+  hydration_level = ks.test(fitness_app_data$hydration_level, "pnorm", 
+                           mean = mean(fitness_app_data$hydration_level), 
+                           sd = sd(fitness_app_data$hydration_level)),
+  
+  calories_burned = ks.test(fitness_app_data$calories_burned, "pnorm", 
+                           mean = mean(fitness_app_data$calories_burned), 
+                           sd = sd(fitness_app_data$calories_burned)),
+  
+  age = ks.test(fitness_app_data$age, "pnorm", 
+                           mean = mean(fitness_app_data$age), 
+                           sd = sd(fitness_app_data$age)),
+  
+  duration_minutes = ks.test(fitness_app_data$duration_minutes, "pnorm", 
+                           mean = mean(fitness_app_data$duration_minutes), 
+                           sd = sd(fitness_app_data$duration_minutes)),
+  
+  avg_heart_rate = ks.test(fitness_app_data$avg_heart_rate, "pnorm", 
+                           mean = mean(fitness_app_data$avg_heart_rate), 
+                           sd = sd(fitness_app_data$avg_heart_rate)),
+  
+  bmi = ks.test(fitness_app_data$bmi, "pnorm", 
+                           mean = mean(fitness_app_data$bmi), 
+                           sd = sd(fitness_app_data$bmi)),
+  
+  resting_heart_rate = ks.test(fitness_app_data$resting_heart_rate, "pnorm", 
+                           mean = mean(fitness_app_data$resting_heart_rate), 
+                           sd = sd(fitness_app_data$resting_heart_rate)),
+  
+  blood_press_systolic = ks.test(fitness_app_data$blood_pressure_systolic, "pnorm", 
+                           mean = mean(fitness_app_data$blood_pressure_systolic), 
+                           sd = sd(fitness_app_data$blood_pressure_systolic)),
+  
+  blood_press_diastolic = ks.test(fitness_app_data$blood_pressure_diastolic, "pnorm", 
+                           mean = mean(fitness_app_data$blood_pressure_diastolic), 
+                           sd = sd(fitness_app_data$blood_pressure_diastolic))
+  
+)
+
+# Create Table
+results_table <- data.frame(
+  Variable = c("Daily Steps", "Sleep Duration", "Stress Level", 
+               "Hydration Level", "Calories Burned", "Age", "Duration Minutes", "Avg Heart Rate", "BMI", "Resting Heart Rate", "Blood Pressure Systolic", "Blood Pressure Diastolic"),
+  Shapiro_W = sapply(shapiro_results, function(x) round(x$statistic, 4)),
+  Shapiro_p = sapply(shapiro_results, function(x) format.pval(x$p.value, digits = 4)),
+  KS_D = sapply(ks_results, function(x) round(x$statistic, 4)),
+  KS_p = sapply(ks_results, function(x) format.pval(x$p.value, digits = 4))
+)
+
+# Sonuçları yazdırma
+print(results_table)
+```
+
+## **Rank-Based Normal Score Transformation (RBNST):**
+
+```{r}
+# Sayısal değişkenleri seçme
+numeric_cols <- sapply(fitness_app_data, is.numeric)
+numeric_data <- fitness_app_data[, numeric_cols]
+
+# Rank-based Normal Score Transformation Fonksiyonu
+rank_based_normalization <- function(x) {
+  ranks <- rank(x, ties.method = "average")  # Sıralama
+  n <- length(x)
+  z <- qnorm((ranks - 0.5) / n)  # Standart normal dağılıma dönüşüm
+  return(z)
+}
+
+# Tüm sayısal değişkenlere dönüşüm uygulama
+transformed_data <- as.data.frame(lapply(numeric_data, rank_based_normalization))
+
+# Orijinal ve dönüşümlü verileri birleştirme
+combined_data <- cbind(fitness_app_data, transformed_data)
+colnames(combined_data)[(ncol(fitness_app_data) + 1):ncol(combined_data)] <- 
+  paste0(colnames(numeric_data), "_transformed")
+
+# Kolmogorov-Smirnov normallik testi
+ks_test_results <- sapply(transformed_data, function(col) {
+  ks.test(col, "pnorm", mean = mean(col), sd = sd(col))$p.value
+})
+
+# Sonuçları tablo olarak gösterme
+ks_test_table <- data.frame(
+  Variable = colnames(transformed_data),
+  P_Value = ks_test_results,
+  Normal_Distribution = ifelse(ks_test_results > 0.05, "Yes", "No")
+)
+
+# Tabloyu yazdırma
+print(ks_test_table)
+
+# Dönüştürülmüş veriyi kaydetme
+write.csv(combined_data, "fitness_app_data_transformed.csv", row.names = FALSE)
+```

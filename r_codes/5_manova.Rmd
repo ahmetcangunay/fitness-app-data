@@ -1,0 +1,172 @@
+---
+title: "manova"
+output: html_document
+---
+
+```{r}
+# Imprt Libraries
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(car)
+library(broom)
+library(dplyr)
+library(tidyr)
+library(haven)
+library(effectsize)
+library(heplots)
+library(gplots)
+library(biotools)
+```
+
+```{r}
+fitness_app_data <- read.csv("~/Desktop/my_project/fitness_app_data_project/data/fitness_app_data_transformed.csv")
+```
+
+```{r}
+unique(fitness_app_data$activity_type)
+```
+
+```{r}
+summary(fitness_app_data)
+```
+
+```{r}
+fitness_app_data$fitness_level_category_encoded<-factor(fitness_app_data$fitness_level_category,levels = c(1,2,3),labels=c("Low","Medium","High"))
+fitness_app_data$activity_type_encoded<-factor(fitness_app_data$activity_type,levels = c(1,2,3,4,5,6,7,8,9,10),labels=c("Basketball","Cycling","Dancing","HIIT","Running","Swimming","Tennis","Walking","Weight Training","Yoga"))
+```
+
+```{r}
+#Distributions
+fitness_app_data %>%
+  group_by(fitness_level_category_encoded) %>%
+  summarise(N = n())
+```
+
+```{r}
+fitness_app_data %>%
+  group_by(activity_type_encoded) %>%
+  summarise(N = n())
+```
+
+```{r}
+plotmeans(duration_minutes_transformed~fitness_level_category,xlab="fitness_level_category",ylab="duration_minutes_transformed", main="Mean Plot\nwith 95% CI",data=fitness_app_data)
+```
+
+```{r}
+plotmeans(daily_steps_transformed~fitness_level_category,xlab="fitness_level_category",ylab="daily_steps_transformed", main="Mean Plot\nwith 95% CI",data=fitness_app_data)
+```
+
+```{r}
+plotmeans(duration_minutes_transformed~activity_type,xlab="activity_type",ylab="duration_minutes_transformed", main="Mean Plot\nwith 95% CI",data=fitness_app_data)
+```
+
+```{r}
+plotmeans(daily_steps_transformed~activity_type,xlab="activity_type",ylab="daily_steps_transformed", main="Mean Plot\nwith 95% CI",data=fitness_app_data)
+```
+
+```{r}
+#Multivariate Normality Test
+fitness_app_data %>%
+  dplyr::select(daily_steps_transformed,duration_minutes_transformed) %>%
+  mshapiro_test()
+```
+
+```{r}
+#Homogeneity of Covariances
+  box_m(fitness_app_data[, c("daily_steps_transformed","duration_minutes_transformed")], fitness_app_data$fitness_level_category)
+```
+
+```{r}
+#MANOVA  
+app_manova <- manova(cbind(daily_steps_transformed,duration_minutes_transformed) ~ fitness_level_category,data=fitness_app_data)
+summary(app_manova, test = "Hotelling-Lawley")
+```
+
+```{r}
+summary(app_manova, test = "Wilks")
+```
+
+```{r}
+summary(app_manova, test = "Pillai")
+```
+
+```{r}
+summary(app_manova, test = "Roy")
+```
+
+## Calculating Partial Eta Squared for All Tests
+
+```{r}
+etasq(app_manova, test="Hotelling-Lawley")
+```
+
+```{r}
+etasq(app_manova, test="Wilks")
+```
+
+```{r}
+etasq(app_manova, test="Pillai")
+```
+
+## Homogeneity of variance - Levene's Test
+
+```{r}
+leveneTest(daily_steps_transformed ~ fitness_level_category, data=fitness_app_data,center=mean)
+```
+
+```{r}
+leveneTest(duration_minutes_transformed ~ fitness_level_category, data=fitness_app_data,center=mean)
+```
+
+## Test of Between Subjects
+
+```{r}
+summary.aov(app_manova)
+```
+
+```{r}
+duration_aov <- aov(duration_minutes_transformed ~ fitness_level_category, data = fitness_app_data)
+etasq(duration_aov)
+```
+
+```{r}
+TukeyHSD(duration_aov, "fitness_level_category")
+```
+
+# Two-Sided MANOVA
+
+```{r}
+# MANOVA  
+fitness_level_category_two_sided <- manova(cbind(daily_steps_transformed,duration_minutes_transformed) ~ fitness_level_category*activity_type,data=fitness_app_data)
+summary(fitness_level_category_two_sided, test = "Wilks")
+```
+
+```{r}
+# PArtial Eta Squared
+etasq(fitness_level_category_two_sided, test="Wilks")
+```
+
+## Homogenity of Variance - Levene Test
+
+```{r}
+fitness_app_data %>% 
+  pivot_longer(c(daily_steps_transformed,duration_minutes_transformed),names_to = "variable", values_to = "value") %>%
+  group_by(variable) %>%
+  levene_test(value ~ fitness_level_category*activity_type,center=mean)
+```
+
+## Interaction Plot Graphs
+
+```{r}
+attach(fitness_app_data)
+interaction.plot(activity_type,fitness_level_category,daily_steps_transformed, fun=mean, type="l", legend=TRUE,col=1:3, lwd=2)
+```
+
+```{r}
+interaction.plot(activity_type,fitness_level_category,duration_minutes_transformed, fun=mean, type="l", legend=TRUE,col=1:3, lwd=2)
+```
+
+```{r}
+detach(fitness_app_data)
+```

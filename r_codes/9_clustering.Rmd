@@ -1,0 +1,110 @@
+---
+title: "clustering"
+output: html_document
+---
+
+```{r}
+library(haven)
+library(dendextend)
+library(readxl)
+library(factoextra)
+library(ggplot2)
+library(circlize)
+library(cluster)
+library(rstatix)
+```
+
+```{r}
+data <- read_excel("~/Desktop/my_project/fitness_app_data_project/data/fitness_app_data_transformed.xlsx")
+```
+
+```{r}
+cluster_data <- data[, c("duration_minutes_transformed", "calories_burned_transformed", "daily_steps_transformed","bmi_transformed")]
+```
+
+```{r}
+d <- dist(cluster_data, method = "euclidean") # uzaklik matrisi
+fit <- hclust(d, method="ward.D") # method= "single", "complete", "average", "ward.D", "centroid"
+dend<-as.dendrogram(fit) # Dendogram çizimi
+plot(dend)
+```
+
+```{r}
+plot(color_branches(dend, k=4))
+```
+
+```{r}
+gen_dend<-dend %>%
+  set("branches_lwd", 2) %>%
+  set("branches_k_color", k = 4)%>%
+  set("labels_cex", 1.2)%>%
+  set("labels_colors",k=4)
+plot(gen_dend,font.axis = 2) #type="triangle"
+```
+
+```{r}
+ggd1 <- as.ggdend(gen_dend)
+library(ggplot2)
+ggplot(ggd1, horiz = T) 
+```
+
+```{r}
+gen_dend%>%
+  set("labels_colors",k=4) %>% 
+  circlize_dendrogram(dend_track_height=0.7)
+```
+
+```{r}
+############     K-MEANS    #############
+# # of Clusters
+fviz_nbclust(cluster_data[,], kmeans, method = "wss")
+```
+
+```{r}
+fviz_nbclust(cluster_data[,], kmeans, method = "silhouette")
+```
+
+```{r}
+set.seed(42) 
+km.res <- kmeans(cluster_data[,],4, iter.max=100, algorithm="Lloyd")
+```
+
+```{r}
+t(km.res$centers)
+```
+
+```{r}
+clusplot(cluster_data[,], km.res$cluster, main='2D representation of the Cluster solution',
+         color=TRUE, shade=TRUE,
+         labels=2, lines=0)
+```
+
+```{r}
+fviz_cluster(km.res, data = cluster_data[,], palette = "jco",
+             ggtheme = theme_minimal())
+```
+
+```{r}
+cluster_data$cluster<-km.res$cluster 
+cluster_data$cluster<-as.factor(cluster_data$cluster)
+```
+
+```{r}
+ds_aov <- aov(daily_steps_transformed ~ cluster, data = cluster_data)
+summary(ds_aov)
+```
+
+```{r}
+cb_aov <- aov(calories_burned_transformed ~ cluster, data = cluster_data)
+summary(cb_aov)
+```
+
+```{r}
+bmi_aov <- aov(bmi_transformed ~ cluster, data = cluster_data)
+summary(bmi_aov)
+```
+
+```{r}
+dm_aov <- aov(duration_minutes_transformed ~ cluster, data = cluster_data)
+summary(dm_aov)
+```
